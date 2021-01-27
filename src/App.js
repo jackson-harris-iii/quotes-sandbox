@@ -4,9 +4,13 @@ import Grid from '@material-ui/core/Grid';
 import { Button, Icon } from '@material-ui/core';
 import FormatQuoteIcon from '@material-ui/icons/FormatQuote';
 import StarBorderIcon from '@material-ui/icons/StarBorder'
+import IconButton from '@material-ui/core/IconButton';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
+import Fade from '@material-ui/core/Fade';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import "./styles.css";
 
 
@@ -24,10 +28,13 @@ const App = () => {
 
   const [quotes, setQuotes] = useState()
   const [randomQuote, setRandomQuote] = useState()
+  const [favorites, setFavorites] = useState([])
+  const [checked, setChecked] = React.useState(false);
   
   useEffect(() => {
     
     loadData()
+    getFavorites()
     
   }, [])
 
@@ -37,20 +44,45 @@ const App = () => {
     console.log(data.quotes)
     setQuotes(data.quotes)
     let randomNumber = Math.floor(Math.random() * data.quotes.length)
-    setRandomQuote(data.quotes[randomNumber])
+    setRandomQuote([data.quotes[randomNumber],randomNumber])
   }
+
+  const getFavorites = async () => {
+    let favorites = localStorage.getItem('favoriteQuotes') 
+    console.log('line 52: ' +favorites)
+    if (favorites) {
+      console.log('line 54: ' +favorites)
+      let favoritesObject = JSON.parse(favorites)
+      setFavorites(favoritesObject)
+    }
+  }
+
 
   const randomQuoteGenerator = () => {
     if (quotes) {
       let randomNumber = Math.floor(Math.random() * quotes.length)
-      setRandomQuote(quotes[randomNumber])
+      setRandomQuote([quotes[randomNumber], randomNumber])
     }
     
   }
 
-  const favoriteQuote = () => {
-    //this will favorite a users quotes
+  const updateFavorites = () => {
+    if (favorites) {
+      let currentFavorites = favorites
+      currentFavorites.push(randomQuote)
+      setFavorites(currentFavorites)
+      let favoritesString = JSON.stringify(currentFavorites)
+      localStorage.setItem('favoriteQuotes', favoritesString)
+    }
   }
+
+  const showfavoriteQuotes = () => {
+
+  }
+
+  const handleChange = () => {
+    setChecked((prev) => !prev);
+  };
 
   return (
     <div className='main'>
@@ -59,22 +91,55 @@ const App = () => {
         <Grid container xs={12} justify="center" spacing={3}>
           <Grid item>
             <Card>
+              <CardContent>
             {
               randomQuote ?  
                 <div>
-                  <h2><FormatQuoteIcon />{randomQuote.quote}<FormatQuoteIcon /></h2>
-                  <p>{randomQuote.author}</p>
+                  <h2><FormatQuoteIcon />{randomQuote[0].quote}<FormatQuoteIcon /></h2>
+                  <p>{randomQuote[0].author}</p>
                 </div> : '...loading'
               }
+              </CardContent>
+               <CardActions>
+                
+                <IconButton aria-label="add to favorites" onClick={updateFavorites}>
+                  <FavoriteIcon />
+                </IconButton>
+
+              </CardActions>
             </Card>
           </Grid>
-          <Grid container item xs={4}>
-            <Grid item spacing={3} xs={6}>
+
+          <Grid container item justify="center" xs={12}>
+            
+            <Grid item spacing={3} xs={4} md={2}>
               <Button className='newQuoteBtn' variant='contained' onClick={randomQuoteGenerator} color='primary'>New Quote</Button>
             </Grid>
             
-            <Grid item spacing={3} xs={6}>
-              <Button className='newQuoteBtn' variant='contained' onClick={favoriteQuote} color='primary'>Favorites</Button>
+            <Grid item spacing={3} xs={4} md={2}>
+              <Button className='newQuoteBtn' variant='contained' onClick={showfavoriteQuotes} color='primary'>My Favorites</Button>
+            </Grid>
+
+            <Grid item spacing={3} xs={12} md={12} style={{marginTop: 25}}>
+              {/* <Fade in={checked}> */}
+                <Card justify="center" style={{maxWidth: 750, margin: 'auto'}}>
+                  <h2> My Favorite Quotes</h2>
+                  {
+                    quotes ? 
+                      favorites.map( (favorite) => {
+                        console.log(JSON.stringify(favorites))
+                        {console.log(favorite)}
+                        return (
+                          <Card>
+                            <p>{favorite[0].quote}</p>
+                            <p>{favorite[0].author}</p>
+                          </Card>
+                        )
+                      }) 
+                      : null
+                  }
+                </Card>
+              {/* </Fade> */}
             </Grid>
             
           </Grid>
